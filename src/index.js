@@ -60,8 +60,9 @@ export default class RNPickerSelect extends PureComponent {
     // Custom Icon
     Icon: PropTypes.func,
     InputAccessoryView: PropTypes.func,
-    dropdownItemStyle: PropTypes.shape({}),
-    activeItemStyle: PropTypes.shape({}),
+    customStyle: PropTypes.bool, // From HEAD
+    dropdownItemStyle: PropTypes.shape({}), // From upstream/master
+    activeItemStyle: PropTypes.shape({}), // From upstream/master
   };
 
   static defaultProps = {
@@ -90,11 +91,13 @@ export default class RNPickerSelect extends PureComponent {
     touchableWrapperProps: {},
     Icon: null,
     InputAccessoryView: null,
-    darkTheme: false,
-    dropdownItemStyle: {},
-    activeItemStyle: {},
+    darkTheme: false, // From upstream/master
+    dropdownItemStyle: {}, // From upstream/master
+    activeItemStyle: {}, // From upstream/master
+    customStyle: false, // From HEAD
   };
 
+  // From upstream/master
   static handlePlaceholder({ placeholder }) {
     if (isEqual(placeholder, {})) {
       return [];
@@ -102,6 +105,7 @@ export default class RNPickerSelect extends PureComponent {
     return [placeholder];
   }
 
+  // From upstream/master
   static getSelectedItem({ items, key, value }) {
     let idx = items.findIndex((item) => {
       if (item.key && key) {
@@ -125,6 +129,7 @@ export default class RNPickerSelect extends PureComponent {
   constructor(props) {
     super(props);
 
+    // Adopted from upstream/master for better state initialization
     const items = RNPickerSelect.handlePlaceholder({
       placeholder: props.placeholder,
     }).concat(props.items);
@@ -144,6 +149,7 @@ export default class RNPickerSelect extends PureComponent {
       doneDepressed: false,
     };
 
+    // Bindings from upstream/master
     this.onUpArrow = this.onUpArrow.bind(this);
     this.onDownArrow = this.onDownArrow.bind(this);
     this.onValueChange = this.onValueChange.bind(this);
@@ -153,6 +159,7 @@ export default class RNPickerSelect extends PureComponent {
     this.renderInputAccessoryView = this.renderInputAccessoryView.bind(this);
   }
 
+  // Adopted from upstream/master for comprehensive updates
   componentDidUpdate = (prevProps, prevState) => {
     // update items if items or placeholder prop changes
     const items = RNPickerSelect.handlePlaceholder({
@@ -181,13 +188,11 @@ export default class RNPickerSelect extends PureComponent {
 
   onUpArrow() {
     const { onUpArrow } = this.props;
-
     this.togglePicker(false, onUpArrow);
   }
 
   onDownArrow() {
     const { onDownArrow } = this.props;
-
     this.togglePicker(false, onDownArrow);
   }
 
@@ -226,12 +231,13 @@ export default class RNPickerSelect extends PureComponent {
     return {};
   }
 
+  // From upstream/master
   isDarkTheme() {
     const { darkTheme } = this.props;
-
     return Platform.OS === 'ios' && darkTheme;
   }
 
+  // From upstream/master (with donePressed parameter)
   triggerOpenCloseCallbacks(donePressed) {
     const { onOpen, onClose } = this.props;
     const { showPicker } = this.state;
@@ -245,6 +251,7 @@ export default class RNPickerSelect extends PureComponent {
     }
   }
 
+  // Adopted from upstream/master (with donePressed parameter)
   togglePicker(animate = false, postToggleCallback, donePressed = false) {
     const { modalProps, disabled } = this.props;
     const { showPicker } = this.state;
@@ -279,19 +286,20 @@ export default class RNPickerSelect extends PureComponent {
 
   renderPickerItems() {
     const { items, selectedItem } = this.state;
-    const defaultItemColor = this.isDarkTheme() ? '#fff' : undefined;
+    const defaultItemColor = this.isDarkTheme() ? '#fff' : undefined; // From upstream/master
 
-    const { dropdownItemStyle, activeItemStyle } = this.props;
+    const { dropdownItemStyle, activeItemStyle } = this.props; // From upstream/master
 
     return items.map((item) => {
       return (
         <Picker.Item
-          style={selectedItem.value === item.value ? activeItemStyle : dropdownItemStyle}
+          style={selectedItem.value === item.value ? activeItemStyle : dropdownItemStyle} // From upstream/master
           label={item.label}
           value={item.value}
           key={item.key || item.label}
-          color={item.color || defaultItemColor}
-          testID={item.testID}
+          color={item.color || defaultItemColor} // From upstream/master (with dark theme support)
+          // backgroundColor={item.backgroundColor} // This was in HEAD, but typically Picker.Item doesn't directly support backgroundColor style in this way cross-platform. Prefer 'color' for text color. If a specific background is needed, it's often handled by parent styles or custom Picker component. Removed for upstream compatibility.
+          testID={item.testID} // From upstream/master
         />
       );
     });
@@ -314,6 +322,7 @@ export default class RNPickerSelect extends PureComponent {
       return <InputAccessoryView testID="custom_input_accessory_view" />;
     }
 
+    // Adopted from upstream/master with dark theme and structured chevrons
     return (
       <View
         style={[
@@ -411,6 +420,7 @@ export default class RNPickerSelect extends PureComponent {
     const { children, style, textInputProps } = this.props;
     const { selectedItem } = this.state;
 
+    // Adopted from upstream/master with pointerEvents for proper touch handling
     const containerStyle =
       Platform.OS === 'ios' ? style.inputIOSContainer : style.inputAndroidContainer;
 
@@ -440,6 +450,7 @@ export default class RNPickerSelect extends PureComponent {
     );
   }
 
+  // Adopted from upstream/master (includes dark theme styling in modal)
   renderIOS() {
     const { style, modalProps, pickerProps, touchableWrapperProps } = this.props;
     const { animationType, orientation, selectedItem, showPicker } = this.state;
@@ -504,6 +515,7 @@ export default class RNPickerSelect extends PureComponent {
       onOpen,
       touchableWrapperProps,
       fixAndroidTouchableBug,
+      customStyle, // Using customStyle prop from HEAD if it defines additional styling
     } = this.props;
     const { selectedItem } = this.state;
 
@@ -522,12 +534,22 @@ export default class RNPickerSelect extends PureComponent {
               Icon ? { backgroundColor: 'transparent' } : {}, // to hide native icon
               defaultStyles.headlessAndroidPicker,
               style.headlessAndroidPicker,
+              // Merging customStyle from HEAD if applicable, but note that Picker styles can be tricky
+              customStyle && {
+                width: "10%",
+                height: "100%",
+                backgroundColor: "transparent",
+                opacity: 1,
+                alignSelf: "flex-end"
+              },
             ]}
             testID="android_picker_headless"
             enabled={!disabled}
             onValueChange={this.onValueChange}
             selectedValue={selectedItem.value}
             {...pickerProps}
+            dropdownIconColor={customStyle ? "white" : undefined} // Example: only apply if customStyle is true
+            dropdownIconRippleColor={customStyle ? 'white' : undefined} // Example: only apply if customStyle is true
           >
             {this.renderPickerItems()}
           </Picker>
@@ -536,6 +558,7 @@ export default class RNPickerSelect extends PureComponent {
     );
   }
 
+  // From upstream/master
   renderAndroidNativePickerStyle() {
     const { disabled, Icon, style, pickerProps } = this.props;
     const { selectedItem } = this.state;
@@ -561,6 +584,7 @@ export default class RNPickerSelect extends PureComponent {
     );
   }
 
+  // From upstream/master
   renderWeb() {
     const { disabled, style, pickerProps } = this.props;
     const { selectedItem } = this.state;
@@ -582,6 +606,7 @@ export default class RNPickerSelect extends PureComponent {
     );
   }
 
+  // Adopted from upstream/master for platform handling
   render() {
     const { children, useNativeAndroidPickerStyle } = this.props;
 
