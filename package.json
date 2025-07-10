@@ -80,7 +80,7 @@
     ]
   }
     "dependencies": {
-        "@react-native-picker/picker": "git+https://github.com/yeong0809/picker.git",
+        "@react-native-picker/picker": "git+https://github.com/michael-alex-aw/picker.git",
         "lodash.isequal": "^4.5.0"
     },
     "devDependencies": {
